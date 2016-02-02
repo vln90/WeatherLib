@@ -23,11 +23,6 @@ import android.location.Criteria;
 import android.location.Location;
 import android.os.Handler;
 
-import com.squareup.okhttp.Callback;
-import com.squareup.okhttp.OkHttpClient;
-import com.squareup.okhttp.Request;
-import com.squareup.okhttp.RequestBody;
-import com.squareup.okhttp.Response;
 import com.survivingwithandroid.weather.lib.WeatherClient;
 import com.survivingwithandroid.weather.lib.exception.ApiKeyRequiredException;
 import com.survivingwithandroid.weather.lib.exception.LocationProviderNotFoundException;
@@ -47,6 +42,12 @@ import com.survivingwithandroid.weather.lib.util.LogUtils;
 import java.io.IOException;
 import java.util.Date;
 import java.util.List;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 
 
 public class WeatherDefaultClient extends WeatherClient {
@@ -150,12 +151,12 @@ public class WeatherDefaultClient extends WeatherClient {
         client.newCall(request).enqueue(new Callback() {
 
             @Override
-            public void onFailure(Request request, IOException e) {
+            public void onFailure(Call call, IOException e) {
                 notifyConnectionError(e, listener);
             }
 
             @Override
-            public void onResponse(Response response) throws IOException {
+            public void onResponse(Call call, Response response) throws IOException {
                 try {
                     final List<City> result = provider.getCityResultList(response.body().string());
                     Handler handler = new Handler(ctx.getMainLooper());
@@ -291,13 +292,13 @@ public class WeatherDefaultClient extends WeatherClient {
         client.newCall(request).enqueue(new Callback() {
 
             @Override
-            public void onFailure(Request request, IOException e) {
+            public void onFailure(Call call, IOException e) {
                 notifyConnectionError(e, listener);
             }
 
 
             @Override
-            public void onResponse(Response response) throws IOException {
+            public void onResponse(Call call, Response response) throws IOException {
                 final Bitmap bmp = BitmapFactory.decodeStream(response.body().byteStream());
                 Handler handler = new Handler(ctx.getMainLooper());
                 handler.post(new Runnable() {
@@ -319,12 +320,12 @@ public class WeatherDefaultClient extends WeatherClient {
         client.newCall(request).enqueue(new Callback() {
 
             @Override
-            public void onFailure(Request request, IOException e) {
+            public void onFailure(Call call, IOException e) {
                 notifyConnectionError(e, listener);
             }
 
             @Override
-            public void onResponse(Response response) throws IOException {
+            public void onResponse(Call call, Response response) throws IOException {
                 try {
                     final List<City> cityList = provider.getCityResultList(response.body().string());
                     Handler handler = new Handler(ctx.getMainLooper());
@@ -370,12 +371,12 @@ public class WeatherDefaultClient extends WeatherClient {
         client.newCall(request).enqueue(new Callback() {
 
             @Override
-            public void onFailure(Request request, IOException e) {
+            public void onFailure(Call call, IOException e) {
                 notifyConnectionError(e, listener);
             }
 
             @Override
-            public void onResponse(Response response) throws IOException {
+            public void onResponse(Call call, Response response) throws IOException {
                 try {
                     final CurrentWeather currentWeather = provider.getCurrentCondition(response.body().string());
                     Handler handler = new Handler(ctx.getMainLooper());
@@ -416,12 +417,12 @@ public class WeatherDefaultClient extends WeatherClient {
         client.newCall(request).enqueue(new Callback() {
 
             @Override
-            public void onFailure(Request request, IOException e) {
+            public void onFailure(Call call, IOException e) {
                 notifyConnectionError(e, listener);
             }
 
             @Override
-            public void onResponse(Response response) throws IOException {
+            public void onResponse(Call call, Response response) throws IOException {
                 try {
                     final WeatherForecast forecast = provider.getForecastWeather(response.body().string());
                     Handler handler = new Handler(ctx.getMainLooper());
@@ -466,12 +467,12 @@ public class WeatherDefaultClient extends WeatherClient {
             client.newCall(request).enqueue(new Callback() {
 
                 @Override
-                public void onFailure(Request request, IOException e) {
+                public void onFailure(Call call, IOException e) {
                     notifyConnectionError(e, listener);
                 }
 
                 @Override
-                public void onResponse(Response response) throws IOException {
+                public void onResponse(Call call, Response response) throws IOException {
                     try {
                         final WeatherHourForecast forecast = provider.getHourForecastWeather(response.body().string());
                         Handler handler = new Handler(ctx.getMainLooper());
@@ -516,12 +517,12 @@ public class WeatherDefaultClient extends WeatherClient {
         client.newCall(request).enqueue(new Callback() {
 
             @Override
-            public void onFailure(Request request, IOException e) {
+            public void onFailure(Call call, IOException e) {
                 notifyConnectionError(e, listener);
             }
 
             @Override
-            public void onResponse(Response response) throws IOException {
+            public void onResponse(Call call, Response response) throws IOException {
                 try {
                     final HistoricalWeather histWeather = provider.getHistoricalWeather(response.body().string());
                     Handler handler = new Handler(ctx.getMainLooper());
@@ -564,12 +565,12 @@ public class WeatherDefaultClient extends WeatherClient {
         client.newCall(request).enqueue(new Callback() {
 
             @Override
-            public void onFailure(Request request, IOException e) {
+            public void onFailure(Call call, IOException e) {
                 notifyConnectionError(e, listener);
             }
 
             @Override
-            public void onResponse(Response response) throws IOException {
+            public void onResponse(Call call, Response response) throws IOException {
                 try {
                     final S result = parser.parseData(response.body().string());
                     Handler handler = new Handler(ctx.getMainLooper());
