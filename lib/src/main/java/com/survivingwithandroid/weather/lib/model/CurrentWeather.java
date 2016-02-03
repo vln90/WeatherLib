@@ -27,4 +27,8 @@ public class CurrentWeather extends BaseWeather {
 
     public Weather weather = new Weather();
 
+    public WeatherHourForecast hourForecast = new WeatherHourForecast();
+
+    public WeatherForecast dayForecast = new WeatherForecast();
+
 }

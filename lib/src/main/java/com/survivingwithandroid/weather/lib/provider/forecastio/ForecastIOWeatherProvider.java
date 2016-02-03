@@ -27,7 +27,6 @@ import org.json.JSONObject;
 
 import java.util.Date;
 import java.util.List;
-import java.util.StringTokenizer;
 
 /**
  * ${copyright}.
@@ -176,7 +175,7 @@ public class ForecastIOWeatherProvider implements IWeatherProvider {
 
             // Parse city
             com.survivingwithandroid.weather.lib.model.Location loc = new com.survivingwithandroid.weather.lib.model.Location();
-            loc.setLatitude((float)  rootObj.getDouble("latitude"));
+            loc.setLatitude((float) rootObj.getDouble("latitude"));
             loc.setLongitude((float) rootObj.getDouble("longitude"));
 
             weather.location = loc;
@@ -187,7 +186,8 @@ public class ForecastIOWeatherProvider implements IWeatherProvider {
 
             loc.setSunrise(currently.optLong("sunriseTime"));
             loc.setSunset(currently.optLong("sunsetTime"));
-            weather = parseWeather(currently);
+            parseWeather(weather, currently);
+            weather.timestamp = currently.optLong("time") * 1000;
             cWeather.weather = weather;
             cWeather.setUnit(units);
 
@@ -198,15 +198,17 @@ public class ForecastIOWeatherProvider implements IWeatherProvider {
             JSONArray jsonData = hourly.getJSONArray("data");
             for (int i=0; i < jsonData.length(); i++) {
                 JSONObject jsonHour = jsonData.getJSONObject(i);
-                Weather hWeather = parseWeather(jsonHour);
+                Weather hWeather = new Weather();
+                parseWeather(hWeather, jsonHour);
                 HourForecast hourForecast = new HourForecast();
-                hourForecast.timestamp = jsonHour.optLong("time");
+                hourForecast.timestamp = jsonHour.optLong("time") * 1000;
                 hourForecast.weather = hWeather;
 
                 whf.addForecast(hourForecast);
             }
 
             whf.setUnit(units);
+            cWeather.hourForecast = whf;
 
             // Day forecast
             JSONObject daily = rootObj.getJSONObject("daily");
@@ -217,15 +219,17 @@ public class ForecastIOWeatherProvider implements IWeatherProvider {
 
             for (int i=0; i < jsonDailyData.length(); i++) {
                 JSONObject jsonDay = jsonDailyData.getJSONObject(i);
-                Weather hWeather = parseWeather(jsonDay);
+                Weather hWeather = new Weather();
+                parseWeather(hWeather, jsonDay);
                 DayForecast dayForecast = new DayForecast();
-                dayForecast.timestamp = jsonDay.optLong("time");
+                dayForecast.timestamp = jsonDay.optLong("time") * 1000;
                 dayForecast.weather = hWeather;
 
                 forecast.addForecast(dayForecast);
             }
 
             forecast.setUnit(units);
+            cWeather.dayForecast = forecast;
         }
         catch (JSONException json) {
             //json.printStackTrace();
@@ -237,9 +241,7 @@ public class ForecastIOWeatherProvider implements IWeatherProvider {
         cWeather.weather = weather;
     }
 
-    private Weather parseWeather(JSONObject jsonWeather) throws JSONException {
-        Weather weather = new Weather();
-
+    private void parseWeather(Weather weather, JSONObject jsonWeather) throws JSONException {
         weather.currentCondition.setDescr(jsonWeather.optString("summary"));
         weather.currentCondition.setIcon(jsonWeather.optString("icon"));
 
@@ -252,17 +254,20 @@ public class ForecastIOWeatherProvider implements IWeatherProvider {
         weather.temperature.setTemp((float) jsonWeather.optDouble("temperature"));
         weather.temperature.setMinTemp((float) jsonWeather.optDouble("temperatureMin"));
         weather.temperature.setMaxTemp((float) jsonWeather.optDouble("temperatureMax"));
+
         weather.currentCondition.setDewPoint((float) jsonWeather.optDouble("dewPoint"));
 
         weather.wind.setSpeed((float) jsonWeather.optDouble("windSpeed"));
         weather.wind.setDeg((float) jsonWeather.optDouble("windBearing"));
 
-        weather.clouds.setPerc((int) jsonWeather.optDouble("cloudCover") * 100); // We transform it in percentage
+        weather.clouds.setPerc((int) (jsonWeather.optDouble("cloudCover") * 100)); // We transform it in percentage
         weather.currentCondition.setHumidity((float) jsonWeather.optDouble("humidity") * 100);
         weather.currentCondition.setVisibility((float) jsonWeather.optDouble("visibility"));
         weather.currentCondition.setPressure((float) jsonWeather.optDouble("pressure"));
+        weather.currentCondition.setFeelsLike((float) jsonWeather.optDouble("apparentTemperature"));
 
-        return weather;
+        weather.location.setSunrise(jsonWeather.optLong("sunriseTime") * 1000);
+        weather.location.setSunset(jsonWeather.optLong("sunsetTime") * 1000);
     }
 
     private boolean isExpired() {

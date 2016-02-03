@@ -12,6 +12,7 @@ import com.survivingwithandroid.weather.lib.WeatherCode;
  * @author Francesco Azzola
 * */
 public class Weather {
+    public long timestamp;
     public Location location = new Location();
     public Condition currentCondition = new Condition();
     public Temperature temperature = new Temperature();
