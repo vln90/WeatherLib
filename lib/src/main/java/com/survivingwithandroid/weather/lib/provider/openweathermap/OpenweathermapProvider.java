@@ -170,9 +170,10 @@ public class OpenweathermapProvider implements IWeatherProvider {
             }
 
 
-        } catch (JSONException json) {
-            json.printStackTrace();
-            throw new WeatherLibException(json);
+        } catch (Exception e) {
+            e.printStackTrace();
+            
+            throw new WeatherLibException(e);
         }
 
         cWeather.setUnit(units);
