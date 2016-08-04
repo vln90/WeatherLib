@@ -1,8 +1,8 @@
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion rootProject.ext.compileSdkVersion
-    buildToolsVersion rootProject.ext.buildToolsVersion
+    compileSdkVersion 23
+    buildToolsVersion "23.0.2"
 
     defaultConfig {
         minSdkVersion 9
@@ -42,7 +42,7 @@ dependencies {
 
 
 
-task clearJar(type: Delete) {
+/*task clearJar(type: Delete) {
     delete 'build/libs/' + POM_ARTIFACT_ID + '_' + VERSION_NAME + '.jar'
 }
 
@@ -53,5 +53,5 @@ task makeJar(type: Copy) {
     rename ('classes.jar', POM_ARTIFACT_ID + '_' +  VERSION_NAME + '.jar')
 }
 
-makeJar.dependsOn(clearJar, build)
-apply from: '../maven_push.gradle'
+makeJar.dependsOn(clearJar, build)*/
+//apply from: '../maven_push.gradle'
