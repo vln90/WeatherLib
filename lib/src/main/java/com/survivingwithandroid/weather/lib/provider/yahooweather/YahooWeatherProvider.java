@@ -40,6 +40,9 @@ import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserFactory;
 
 import java.io.StringReader;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.text.MessageFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -48,8 +51,8 @@ import java.util.Locale;
 
 public class YahooWeatherProvider implements IWeatherProvider {
 
-    private static String YAHOO_GEO_URL = "http://where.yahooapis.com/v1";
-    private static String YAHOO_WEATHER_URL = "http://weather.yahooapis.com/forecastrss";
+    private static final String YAHOO_GEO_URL = "http://where.yahooapis.com/v1";
+    private static final String YAHOO_WEATHER_URL = "https://query.yahooapis.com/v1/public/yql";
     private static final String YAHOO_IMG_URL = "http://l.yimg.com/a/i/us/we/52/";
 
     private WeatherConfig config;
@@ -192,7 +195,7 @@ public class YahooWeatherProvider implements IWeatherProvider {
         return getWeather(data).second;
     }
 
-    private Pair<CurrentWeather, WeatherForecast> getWeather(final String data) throws WeatherLibException{
+    private Pair<CurrentWeather, WeatherForecast> getWeather(final String data) throws WeatherLibException {
         final Weather current = new Weather();
         final WeatherForecast forecast = new WeatherForecast();
 
@@ -220,7 +223,7 @@ public class YahooWeatherProvider implements IWeatherProvider {
                         current.currentCondition.setPressureTrend(WeatherUtility.parseInt(parser.getAttributeValue(null, "rising")));
 
                     } else if (tagName.equals("yweather:forecast")) {
-                        if(isFirstDayForecast) {
+                        if (isFirstDayForecast) {
                             current.temperature.setMinTemp(WeatherUtility.parseInt(parser.getAttributeValue(null, "low")));
                             current.temperature.setMaxTemp(WeatherUtility.parseInt(parser.getAttributeValue(null, "high")));
                             isFirstDayForecast = false;
@@ -252,8 +255,7 @@ public class YahooWeatherProvider implements IWeatherProvider {
                         if (codeProvider != null) {
                             try {
                                 current.currentCondition.setWeatherCode(codeProvider.getWeatherCode(String.valueOf(current.currentCondition.getWeatherId())));
-                            }
-                            catch(Throwable t) {
+                            } catch (Throwable t) {
                                 current.currentCondition.setWeatherCode(WeatherCode.NOT_AVAILABLE);
                             }
                         }
@@ -285,14 +287,12 @@ public class YahooWeatherProvider implements IWeatherProvider {
                         units.distanceUnit = parser.getAttributeValue(null, "distance");
                         units.speedUnit = parser.getAttributeValue(null, "speed");
                     }
-                }
-                else if (event == XmlPullParser.TEXT) {
+                } else if (event == XmlPullParser.TEXT) {
                     text = parser.getText();
-                }
-                else if (event == XmlPullParser.END_TAG) {
-                    if (tagName.equals("geo:lat")){
+                } else if (event == XmlPullParser.END_TAG) {
+                    if (tagName.equals("geo:lat")) {
                         current.location.setLatitude(WeatherUtility.parseFloat(text));
-                    } else if (tagName.equals("geo:long")){
+                    } else if (tagName.equals("geo:long")) {
                         current.location.setLongitude(WeatherUtility.parseFloat(text));
                     }
                 }
@@ -349,22 +349,23 @@ public class YahooWeatherProvider implements IWeatherProvider {
         if (request.getCityId() == null)
             throw new UnsupportedOperationException("Can't use lon and lat");
 
-        return YAHOO_WEATHER_URL + "?w=" + request.getCityId()
-                + "&u=" + (WeatherUtility.isMetric(config.unitSystem) ? "c" : "f")
-                + "&d=1";
+        String query = "select * from weather.forecast where woeid={0} AND u=''{1}''";
+        query = MessageFormat.format(query,
+                request.getCityId(),
+                WeatherUtility.isMetric(config.unitSystem) ? "c" : "f");
+
+        try {
+            query = URLEncoder.encode(query, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException("Url encoding failed", e);
+        }
+
+        return YAHOO_WEATHER_URL + "?q=" + query + "&format=xml";
     }
 
     @Override
     public String getQueryForecastWeatherURL(WeatherRequest request) throws ApiKeyRequiredException {
-        if (config.ApiKey == null)
-            throw new ApiKeyRequiredException();
-
-        if (request.getCityId() == null)
-            throw new UnsupportedOperationException("Can't use lon and lat");
-
-        return YAHOO_WEATHER_URL + "?w=" + request.getCityId()
-                + "&u=" + (WeatherUtility.isMetric(config.unitSystem) ? "c" : "f")
-                + "&d=" + config.numDays;
+        return getQueryCurrentWeatherURL(request);
     }
 
     @Override
